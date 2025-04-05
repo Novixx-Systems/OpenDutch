@@ -11,7 +11,8 @@ namespace OpenDutch
             { "dog", "hond" },
             { "house", "huis" },
             { "car", "auto" },
-            { "tree", "boom" }
+            { "tree", "boom" },
+            { "book", "boek" }
         };
 
         private static Dictionary<string, string> _verbs = new Dictionary<string, string>
@@ -35,6 +36,7 @@ namespace OpenDutch
             { "slow", "traag" },
             { "happy", "blij" },
             { "quick", "snel" },
+            { "good", "goed" },
         };
 
         private static Dictionary<string, string> _adverbs = new Dictionary<string, string>
@@ -78,11 +80,18 @@ namespace OpenDutch
             { "it", "het" },
         };
 
-        private static Dictionary<string, Article> _articles = new Dictionary<string, Article>
+        private static Dictionary<string, string> _articles = new Dictionary<string, string>
+        {
+            { "the", "de" },
+            { "a", "een" },
+            { "an", "een" },
+        };
+
+        private static Dictionary<string, Article> _articles_b = new Dictionary<string, Article>
         {
             { "appel", Article.De },
             { "auto", Article.De },
-            { "huis", Article.De },
+            { "huis", Article.Het },
             { "kat", Article.De },
             { "hond", Article.De },
             { "boom", Article.De },
@@ -104,13 +113,10 @@ namespace OpenDutch
             // adj
             if (wordType == WordType.Adjective && nextWordType == WordType.Noun && previousEnglishWord.ToLower() == "the")
             {
-                if (_articles.TryGetValue(translatedWords[translatedWords.Count - 1].Item1, out Article article))
-                {
-                    translatedWord = article == Article.De ? translatedWord + "e" : translatedWord;
-                }
+                translatedWord = translatedWord + "e";
             }
             // noun
-            else if (wordType == WordType.Noun)
+            else if (wordType == WordType.Noun && wordForm == WordForm.Plural)
             {
                 if (translatedWord.EndsWith("a") || translatedWord.EndsWith("e") || translatedWord.EndsWith("i") || translatedWord.EndsWith("o") || translatedWord.EndsWith("u"))
                 {
@@ -213,6 +219,10 @@ namespace OpenDutch
                 {
                     wordType = WordType.Adjective;
                 }
+                else if (_articles.TryGetValue(wordC.ToLower(), out translatedWord))
+                {
+                    wordType = WordType.Article;
+                }
                 else
                 {
                     translatedWord = word; // No translation found, keep the original word
@@ -221,6 +231,10 @@ namespace OpenDutch
                 if (wordType == WordType.Adjective && word.EndsWith("er"))
                 {
                     wordForm = WordForm.Comparative;
+                }
+                else if (wordType == WordType.Noun && word.EndsWith("s"))
+                {
+                    wordForm = WordForm.Plural;
                 }
                 translatedWords.Add((translatedWord, wordType, wordForm));
             }
@@ -254,6 +268,38 @@ namespace OpenDutch
                     translatedWords.Insert(i + 1, (translatedWord, wordType, wordForm));
                     i--;
                     continue;
+                }
+                if (wordType == WordType.Article && nextWordType == WordType.Noun)
+                {
+                    if (_articles_b.TryGetValue(translatedWords[i + 1].Item1.ToLower(), out Article article))
+                    {
+                        translatedWords.RemoveAt(i);
+                        translatedWords.Insert(i, (article == Article.De ? "de" : "het", WordType.Article, WordForm.None));
+                    }
+                    else
+                    {
+                        translatedWords.RemoveAt(i);
+                        translatedWords.Insert(i, ("een", WordType.Article, WordForm.None));
+                    }
+                    continue;
+                }
+                else if (wordType == WordType.Article && nextWordType == WordType.Adjective)
+                {
+                    bool isNextNextNoun = (i + 2 < translatedWords.Count) && translatedWords[i + 2].Item2 == WordType.Noun;
+                    if (isNextNextNoun)
+                    {
+                        if (_articles_b.TryGetValue(translatedWords[i + 2].Item1.ToLower(), out Article article))
+                        {
+                            translatedWords.RemoveAt(i);
+                            translatedWords.Insert(i, (article == Article.De ? "de" : "het", WordType.Article, WordForm.None));
+                        }
+                        else
+                        {
+                            translatedWords.RemoveAt(i);
+                            translatedWords.Insert(i, ("een", WordType.Article, WordForm.None));
+
+                        }
+                    }
                 }
             }
 

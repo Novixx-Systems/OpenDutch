@@ -16,6 +16,7 @@ namespace OpenDutch
         Pronoun,
         Adjective,
         Determiner,
+        Article,
         Unknown,
         None
     }
@@ -24,6 +25,7 @@ namespace OpenDutch
     {
         Comparative,
         Superlative,
+        Plural,
         None,
     }
 }

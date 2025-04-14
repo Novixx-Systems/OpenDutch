@@ -19,6 +19,8 @@
             Console.WriteLine("A probably better version of the Georgetown-IBM translator");
             Console.WriteLine("Made by Novixx Systems, licensed under the GNU GPL v3");
 
+            Translator.Init();
+
             while (true)
             {
                 Console.Write("> ");

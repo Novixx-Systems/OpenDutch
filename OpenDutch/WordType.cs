@@ -26,6 +26,7 @@ namespace OpenDutch
         Comparative,
         Superlative,
         Plural,
+        Present,
         None,
     }
 }

@@ -26,6 +26,10 @@ namespace OpenDutch
             { "am", "ben" },
             { "is", "is" },
             { "are", "zijn" },
+            { "make", "maak" },
+            { "love", "houd van" },
+            { "do", "doe" },
+            { "want", "wil" },
         };
 
         private static Dictionary<string, string> _adjectives = new Dictionary<string, string>
@@ -37,6 +41,17 @@ namespace OpenDutch
             { "happy", "blij" },
             { "quick", "snel" },
             { "good", "goed" },
+            { "best", "best" },
+            { "amazing", "geweldig" },
+            { "beautiful", "mooi" },
+            { "ugly", "lelijk" },
+            { "funny", "grappig" },
+            { "sad", "verdrietig" },
+            { "angry", "boos" },
+            { "tall", "lang" },
+            { "short", "kort" },
+            { "young", "jong" },
+            { "old", "oud" }
         };
 
         private static Dictionary<string, string> _adverbs = new Dictionary<string, string>
@@ -45,7 +60,8 @@ namespace OpenDutch
             { "slowly", "langzaam" },
             { "happily", "blij" },
             { "sadly", "verdrietig" },
-            { "angrily", "boos" }
+            { "angrily", "boos" },
+            { "now", "nu" },
         };
 
         private static Dictionary<string, string> _prepositions = new Dictionary<string, string>
@@ -108,6 +124,17 @@ namespace OpenDutch
             return consonants.Contains(word[word.Length - 1]);
         }
 
+        public static void Init()
+        {
+            foreach (var verb in _verbs.ToList())
+            {
+                if (verb.Key.EndsWith('e'))
+                {
+                    _verbs.Add(verb.Key.Substring(0, verb.Key.Length - 1), verb.Value);
+                }
+            }
+        }
+
         public static string FixTranslation(string translatedWord, string originalWord, WordForm wordForm, string previousEnglishWord, WordType nextWordType, WordType wordType, ref List<(string, WordType, WordForm)> translatedWords)
         {
             // adj
@@ -137,6 +164,42 @@ namespace OpenDutch
                 else
                 {
                     translatedWord += "er";
+                }
+            }
+            if (wordForm == WordForm.Present && wordType == WordType.Verb)
+            {
+                if (endsWithConsonant(translatedWord) && translatedWord.Length > 2 && translatedWord[translatedWord.Length - 3] == translatedWord[translatedWord.Length - 2])
+                {
+                    translatedWord = translatedWord.Substring(0, translatedWord.Length - 2) + translatedWord[translatedWord.Length - 1] + "en";
+                }
+                else
+                {
+                    if (translatedWord.Contains(' '))
+                    {
+                        string tmp = translatedWord.Split(' ')[0];
+                        translatedWord = tmp + "en " + string.Join(" ", translatedWord.Split(' ').Skip(1));
+                    }
+                    else
+                    {
+                        translatedWord = translatedWord + "en";
+                    }
+                }
+                translatedWord = "aan het " + translatedWord;
+            }
+            else if (wordType == WordType.Verb && previousEnglishWord != "i")
+            {
+                if (translatedWord.Contains(' '))
+                {
+                    string tmp = translatedWord.Split(' ')[0];
+                    translatedWord = tmp + "t " + string.Join(" ", translatedWord.Split(' ').Skip(1));
+                }
+                else
+                {
+                    translatedWord = translatedWord + "t";
+                    if (originalWord == "are")
+                    {
+                        translatedWord = "bent";
+                    }
                 }
             }
             return translatedWord;
@@ -223,6 +286,10 @@ namespace OpenDutch
                 {
                     wordType = WordType.Article;
                 }
+                else if (_verbs.TryGetValue(wordC.ToLower(), out translatedWord))
+                {
+                    wordType = WordType.Verb;
+                }
                 else
                 {
                     translatedWord = word; // No translation found, keep the original word
@@ -236,6 +303,14 @@ namespace OpenDutch
                 {
                     wordForm = WordForm.Plural;
                 }
+                else if (wordType == WordType.Adjective && word.EndsWith("est"))
+                {
+                    wordForm = WordForm.Superlative;
+                }
+                else if (wordType == WordType.Verb && word.EndsWith("ing"))
+                {
+                    wordForm = WordForm.Present;
+                }
                 translatedWords.Add((translatedWord, wordType, wordForm));
             }
 
@@ -247,7 +322,7 @@ namespace OpenDutch
                 string nextEnglishWord = i < translatedWords.Count - 1 ? words[i + 1] : string.Empty;
                 string originalWord = words[i];
                 translatedWords[i] = (translatedWord, wordType, wordForm);
-                translatedWord = FixTranslation(translatedWord, originalWord, wordForm, previousEnglishWord, nextWordType, wordType, ref translatedWords);
+                translatedWord = FixTranslation(translatedWord, originalWord.ToLower(), wordForm, previousEnglishWord.ToLower(), nextWordType, wordType, ref translatedWords);
                 translatedWords[i] = (translatedWord, wordType, wordForm);
             }
 
@@ -269,7 +344,7 @@ namespace OpenDutch
                     i--;
                     continue;
                 }
-                if (wordType == WordType.Article && nextWordType == WordType.Noun)
+                if (wordType == WordType.Article && nextWordType == WordType.Noun && translatedWord == "de")
                 {
                     if (_articles_b.TryGetValue(translatedWords[i + 1].Item1.ToLower(), out Article article))
                     {
@@ -300,6 +375,71 @@ namespace OpenDutch
 
                         }
                     }
+                }
+                else if (wordType == WordType.Verb && wordForm == WordForm.Present)
+                {
+                    int j = i + 1;
+                    while (j < translatedWords.Count && translatedWords[j].Item2 != WordType.Noun)
+                    {
+                        j++;
+                    }
+                    if (j < translatedWords.Count)
+                    {
+                        var temp = translatedWords[i];
+                        translatedWords.RemoveAt(i);
+                        translatedWords.Insert(j, temp);
+                    }
+                }
+                string translatedWordNoT = translatedWord.ToLower();
+                if (translatedWordNoT.EndsWith("t"))
+                {
+                    translatedWordNoT = translatedWordNoT.Substring(0, translatedWordNoT.Length - 1);
+                }
+                if (i == 0 && (translatedWordNoT == "doe" || translatedWordNoT == "is" || translatedWordNoT == "ben") && nextWordType == WordType.Pronoun)
+                {
+                    translatedWords.RemoveAt(i);
+                    if (i + 1 < translatedWords.Count && translatedWords[i + 1].Item2 == WordType.Verb)
+                    {
+                        var temp = translatedWords[i + 1];
+                        string afterSpace = temp.Item1;
+                        string beforeSpace = temp.Item1;
+                        if (afterSpace.Contains(' '))
+                        {
+                            afterSpace = string.Join(" ", afterSpace.Split(' ').Skip(1));
+                            beforeSpace = beforeSpace.Split(' ')[0];
+                        }
+                        if (beforeSpace.EndsWith("t"))
+                        {
+                            if (temp.Item1.Contains(' '))
+                            {
+                                temp = (beforeSpace.Substring(0, beforeSpace.Length - 1) + " " + afterSpace, temp.Item2, temp.Item3);
+                            }
+                            else
+                            {
+                                temp = (beforeSpace.Substring(0, beforeSpace.Length - 1), temp.Item2, temp.Item3);
+                            }
+                        }
+                        translatedWords.RemoveAt(i + 1);
+                        if (temp.Item1.Contains(' '))
+                        {
+                            // Remove after space
+                            string[] parts = temp.Item1.Split(' ');
+                            string afterSpacePart = string.Join(" ", parts.Skip(1));
+                            string beforeSpacePart = parts[0];
+                            translatedWords.Insert(i, (beforeSpacePart, temp.Item2, temp.Item3));
+                            translatedWords.Insert(i + 2, (afterSpacePart, temp.Item2, temp.Item3));
+                        }
+                        else
+                        {
+                            translatedWords.Insert(i, temp);
+                        }
+                    }
+                    else
+                    {
+                        translatedWords.Insert(i, ("doe", WordType.Verb, WordForm.None));
+                    }
+                    i--;
+                    continue;
                 }
             }
 

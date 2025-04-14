@@ -12,7 +12,19 @@ namespace OpenDutch
             { "house", "huis" },
             { "car", "auto" },
             { "tree", "boom" },
-            { "book", "boek" }
+            { "book", "boek" },
+            { "question", "vraag" },
+            { "answer", "antwoord" },
+            { "computer", "computer" },
+            { "phone", "telefoon" },
+            { "apple", "appel" },
+            { "table", "tafel" },
+            { "chair", "stoel" },
+            { "window", "raam" },
+            { "door", "deur" },
+            { "friend", "vriend" },
+            { "family", "familie" },
+            { "school", "school" },
         };
 
         private static Dictionary<string, string> _verbs = new Dictionary<string, string>
@@ -30,6 +42,7 @@ namespace OpenDutch
             { "love", "houd van" },
             { "do", "doe" },
             { "want", "wil" },
+            { "have", "heb" },
         };
 
         private static Dictionary<string, string> _adjectives = new Dictionary<string, string>
@@ -116,6 +129,13 @@ namespace OpenDutch
             { "boek", Article.Het },
             { "computer", Article.De },
             { "telefoon", Article.De },
+            { "raam", Article.Het },
+            { "deur", Article.De },
+            { "vraag", Article.De },
+            { "antwoord", Article.Het },
+            { "vriend", Article.De },
+            { "familie", Article.De },
+            { "school", Article.De },
         };
 
         public static bool endsWithConsonant(string word)
@@ -207,6 +227,10 @@ namespace OpenDutch
 
         public static string rootify(string word)
         {
+            if (_nouns.ContainsKey(word.ToLower()))
+            {
+                return word.ToLower();
+            }
             if (word.EndsWith("ing"))
             {
                 return word.Substring(0, word.Length - 3);

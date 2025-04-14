@@ -25,6 +25,7 @@ namespace OpenDutch
             { "friend", "vriend" },
             { "family", "familie" },
             { "school", "school" },
+            { "word", "woord" },
         };
 
         private static Dictionary<string, string> _verbs = new Dictionary<string, string>
@@ -35,14 +36,14 @@ namespace OpenDutch
             { "drink", "drink" },
             { "sleep", "slaap" },
             { "play", "speel" },
-            { "am", "ben" },
-            { "is", "is" },
             { "are", "zijn" },
             { "make", "maak" },
             { "love", "houd van" },
-            { "do", "doe" },
             { "want", "wil" },
             { "have", "heb" },
+            { "am", "ben" },
+            { "do", "doe" },
+            { "is", "is" },
         };
 
         private static Dictionary<string, string> _adjectives = new Dictionary<string, string>
@@ -83,7 +84,7 @@ namespace OpenDutch
             { "on", "op" },
             { "at", "bij" },
             { "with", "met" },
-            { "to", "naar" }
+            { "to", "naar" },
         };
 
         private static Dictionary<string, string> _conjunctions = new Dictionary<string, string>
@@ -136,6 +137,7 @@ namespace OpenDutch
             { "vriend", Article.De },
             { "familie", Article.De },
             { "school", Article.De },
+            { "woord", Article.Het },
         };
 
         public static bool endsWithConsonant(string word)
@@ -206,7 +208,7 @@ namespace OpenDutch
                 }
                 translatedWord = "aan het " + translatedWord;
             }
-            else if (wordType == WordType.Verb && previousEnglishWord != "i")
+            else if (wordType == WordType.Verb && previousEnglishWord != "i" && originalWord != "is")
             {
                 if (translatedWord.Contains(' '))
                 {
@@ -227,7 +229,7 @@ namespace OpenDutch
 
         public static string rootify(string word)
         {
-            if (_nouns.ContainsKey(word.ToLower()))
+            if (_nouns.ContainsKey(word.ToLower()) || _verbs.ContainsKey(word.ToLower()))
             {
                 return word.ToLower();
             }
